@@ -25,11 +25,11 @@ hero:
   show_stats: true
   github_contributions:
     enabled: false
-    username: ""
+    username: "JUHOSEOK"
 
 profile:
   github_sync:
-    enabled: false
+    enabled: true
 
 footer:
   tagline: Open-source Jekyll theme for developer blogs.
