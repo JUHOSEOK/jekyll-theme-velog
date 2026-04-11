@@ -24,7 +24,7 @@ home:
 hero:
   show_stats: true
   github_contributions:
-    enabled: false
+    enabled: true
     username: "JUHOSEOK"
 
 profile:
