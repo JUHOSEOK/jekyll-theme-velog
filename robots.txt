@@ -1,1 +1,1 @@
-Sitemap: https://woonyong-kr.github.io/jekyll-theme-velog/sitemap.xml
+Sitemap: https://juhoseok.github.io/my-blog/sitemap.xml
