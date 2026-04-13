@@ -7,6 +7,7 @@ tags:
   - Pointer
   - Memory
   - Array
+  - jungle
 ---
 
 ## 변수의 의미
