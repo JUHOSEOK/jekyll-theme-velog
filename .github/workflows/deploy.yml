@@ -8,12 +8,17 @@ on:
     - cron: '17 3 * * *'
   workflow_dispatch:
 
-# gh-pages 브랜치에 쓰기 권한 부여
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
 
     env:
@@ -31,6 +36,9 @@ jobs:
           ruby-version: '3.2'
           bundler: '2.5.23'
           bundler-cache: true
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
 
       # 파비콘 동기화에 필요한 Python 이미지 라이브러리
       # 설치 실패 시 파비콘 동기화만 건너뛰고 빌드는 계속 진행
@@ -58,11 +66,18 @@ jobs:
           test -d _site
           test -f _site/index.html
 
-      # _site/ 결과물을 gh-pages 브랜치로 배포
-      # .nojekyll 자동 추가로 GitHub Pages가 Jekyll 재빌드하지 않도록 처리
-      - name: Deploy to gh-pages
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./_site
-          publish_branch: gh-pages
+          path: ./_site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
