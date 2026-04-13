@@ -1,7 +1,7 @@
 ---
-title: [week6] WIL + SQL 처리기
-description: 정글 5주차 회고
-date: 2026-04-09 20:00:00 +0900
+title: 정글 [week6] WIL + SQL 처리기
+description: 정글 6주차 회고
+date: 2026-04-02 20:00:00 +0900
 tags:
   - C
   - data structures and algorithms 
@@ -10,9 +10,6 @@ tags:
 ---
 
 # 정글 [week6] WIL + SQL 처리기
-
-영역 · 자원: 희고 (https://www.notion.so/321c2e888cb580f5b4c5d57027f0615a?pvs=21)
-고정하기: No
 
 # 이번 주 목표
 

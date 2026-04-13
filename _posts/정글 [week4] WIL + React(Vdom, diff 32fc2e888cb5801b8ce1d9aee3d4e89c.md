@@ -11,8 +11,6 @@ tags:
 
 # 정글 [week4] WIL + React(Vdom, diff
 
-
-
 [4주차 학습목표 수립 ](https://www.notion.so/4-32bc2e888cb5805888bbf545414c1ee0?pvs=21)
 
 ## 1. 이번 주 목표

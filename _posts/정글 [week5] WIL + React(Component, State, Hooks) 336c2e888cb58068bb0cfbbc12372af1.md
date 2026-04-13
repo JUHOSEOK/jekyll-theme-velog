@@ -11,7 +11,6 @@ tags:
 
 # 정글 [week5] WIL + React(Component, State, Hooks)
 
-
 ## 이번 주 목표
 
 이번 주 학습 키워드는 **동적 계획법(DP)** 과 **탐욕 알고리즘(Greedy)**, 두 가지였다.
