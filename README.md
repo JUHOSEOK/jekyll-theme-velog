@@ -2,7 +2,7 @@
 
 velog 읽는 흐름이 편해서 비슷하게 만들어봤습니다. Jekyll 기반이고 GitHub Pages에 올려서 씁니다.
 
-라이브 데모: [https://woonyong-kr.github.io/jekyll-theme-velog/](https://woonyong-kr.github.io/jekyll-theme-velog/)
+라이브 데모: (https://juhoseok.github.io/jekyll-theme-velog/)
 
 다크 모드 기준으로 찍은 스크린샷입니다.
 
