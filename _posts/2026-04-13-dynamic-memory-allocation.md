@@ -1,5 +1,5 @@
 ---
-title: Dynamic Memory Allocation
+title: Dynamic Memory Allocation (implicit free list)
 description: 동적 메모리 할당기의 기본 개념과 implicit free list 기반 allocator의 흐름을 정리한다.
 date: 2026-04-13 16:00:00 +0900
 tags:
