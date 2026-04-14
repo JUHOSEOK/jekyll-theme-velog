@@ -57,8 +57,9 @@ jobs:
         continue-on-error: true
 
       # Jekyll 정적 파일 빌드
+      # 미래 날짜 글도 main push 시 바로 공개되도록 포함
       - name: Build Site
-        run: bundle exec jekyll build
+        run: bundle exec jekyll build --future
 
       # 빌드 결과물 최소 검증
       - name: Verify Build
