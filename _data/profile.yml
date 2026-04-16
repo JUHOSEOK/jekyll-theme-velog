@@ -3,3 +3,12 @@ bio: GitHub 프로필 동기화 전 기본 프로필입니다.
 intro: "@JUHOSEOK"
 avatar: /assets/images/avatar-placeholder.svg
 github: https://github.com/JUHOSEOK
+accounts:
+  - login: JUHOSEOK
+    display_name: JUHOSEOK
+    avatar: /assets/images/avatar-placeholder.svg
+    github: https://github.com/JUHOSEOK
+  - login: hos0ek71
+    display_name: hos0ek71
+    avatar: /assets/images/avatar-placeholder.svg
+    github: https://github.com/hos0ek71

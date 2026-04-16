@@ -129,6 +129,15 @@ bio: 한 줄 소개
 intro: 추가 정보
 avatar: /assets/images/avatar-placeholder.svg
 github: https://github.com/your-handle
+accounts:
+  - login: your-handle
+    display_name: 이름
+    avatar: /assets/images/avatar-placeholder.svg
+    github: https://github.com/your-handle
+  - login: team-member
+    display_name: 팀원 이름
+    avatar: /assets/images/avatar-placeholder.svg
+    github: https://github.com/team-member
 ```
 
 ### _data/series.yml

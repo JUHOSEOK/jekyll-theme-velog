@@ -2,6 +2,7 @@
 {% assign series_count = site.posts | where_exp: "post", "post.series" | group_by: "series" | size %}
 {% assign github_profile = site.data.github_profile_cache %}
 {% assign github_profiles = site.data.github_profiles_cache.profiles %}
+{% assign profile_accounts = site.data.profile.accounts %}
 {% assign configured_login = site.data.theme.hero.github_contributions.username | default: "" %}
 {% assign fallback_github_url = site.data.profile.github | default: "" %}
 {% if configured_login == "" and fallback_github_url contains 'github.com/' %}
@@ -66,29 +67,52 @@
           </div>
         {% endif %}
 
-        {% if github_profiles %}
+        {% if profile_accounts and profile_accounts.size > 0 %}
           <div class="profile__accounts">
             <p class="profile__accounts-title">운영 GitHub 계정</p>
             <div class="profile__accounts-list">
-              {% for account_profile in github_profiles %}
-                {% if account_profile.enabled %}
-                  <a class="profile__account-card" href="{{ account_profile.profile_url }}" target="_blank" rel="noreferrer">
-                    <img
-                      class="profile__account-avatar"
-                      src="{{ account_profile.avatar_url }}"
-                      alt="{{ account_profile.display_name | default: account_profile.login }}"
-                      width="40"
-                      height="40"
-                    >
+              {% for configured_account in profile_accounts %}
+                {% assign account_login = configured_account.login | default: "" %}
+                {% assign account_name = configured_account.display_name | default: account_login %}
+                {% assign account_avatar = configured_account.avatar | default: site.data.profile.avatar %}
+                {% assign account_url = configured_account.github | default: "" %}
+                {% if github_profiles %}
+                  {% for account_profile in github_profiles %}
+                    {% if account_profile.enabled and account_profile.login == account_login %}
+                      {% if account_profile.display_name != "" %}
+                        {% assign account_name = account_profile.display_name %}
+                      {% endif %}
+                      {% if account_profile.avatar_url != "" %}
+                        {% assign account_avatar = account_profile.avatar_url %}
+                      {% endif %}
+                      {% if account_profile.profile_url != "" %}
+                        {% assign account_url = account_profile.profile_url %}
+                      {% endif %}
+                    {% endif %}
+                  {% endfor %}
+                {% endif %}
+                {% if account_login != "" and account_url != "" %}
+                  <a class="profile__account-card" href="{{ account_url }}" target="_blank" rel="noreferrer">
+                    {% if account_avatar contains '://' %}
+                      <img
+                        class="profile__account-avatar"
+                        src="{{ account_avatar }}"
+                        alt="{{ account_name }}"
+                        width="40"
+                        height="40"
+                      >
+                    {% else %}
+                      <img
+                        class="profile__account-avatar"
+                        src="{{ account_avatar | relative_url }}"
+                        alt="{{ account_name }}"
+                        width="40"
+                        height="40"
+                      >
+                    {% endif %}
                     <span class="profile__account-body">
-                      <span class="profile__account-name">
-                        {% if account_profile.display_name != "" %}
-                          {{ account_profile.display_name }}
-                        {% else %}
-                          {{ account_profile.login }}
-                        {% endif %}
-                      </span>
-                      <span class="profile__account-login">@{{ account_profile.login }}</span>
+                      <span class="profile__account-name">{{ account_name }}</span>
+                      <span class="profile__account-login">@{{ account_login }}</span>
                     </span>
                   </a>
                 {% endif %}

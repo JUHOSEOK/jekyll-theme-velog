@@ -185,11 +185,22 @@ end
 def resolve_usernames(settings:, profile:)
   explicit_primary = settings["username"].to_s.strip
   fallback_login = parse_login_from_github_url(profile["github"])
+  if fallback_login.empty?
+    fallback_login = Array(profile["accounts"])
+      .map { |account| account["login"].to_s.strip.empty? ? parse_login_from_github_url(account["github"]) : account["login"].to_s.strip }
+      .reject(&:empty?)
+      .first.to_s
+  end
   primary_login = explicit_primary.empty? ? fallback_login : explicit_primary
 
   configured_usernames = Array(settings["usernames"])
     .map { |value| value.to_s.strip }
     .reject(&:empty?)
+  configured_usernames.concat(
+    Array(profile["accounts"])
+      .map { |account| account["login"].to_s.strip.empty? ? parse_login_from_github_url(account["github"]) : account["login"].to_s.strip }
+      .reject(&:empty?)
+  )
 
   usernames = configured_usernames.dup
   usernames.unshift(primary_login) unless primary_login.empty?
