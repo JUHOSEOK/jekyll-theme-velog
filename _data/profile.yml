@@ -1,5 +1,5 @@
 display_name: JUHOSEOK
-bio: GitHub 프로필 동기화 전 기본 프로필입니다.
+bio: 크래프톤 정글전용 깃허브 계정
 intro: "@JUHOSEOK"
 avatar: /assets/images/avatar-placeholder.svg
 github: https://github.com/JUHOSEOK
@@ -9,6 +9,7 @@ accounts:
     avatar: /assets/images/avatar-placeholder.svg
     github: https://github.com/JUHOSEOK
   - login: hos0ek71
+    bio: 개인 깃허브 계정 
     display_name: hos0ek71
     avatar: /assets/images/avatar-placeholder.svg
     github: https://github.com/hos0ek71

@@ -1,0 +1,26 @@
+{
+  "enabled": true,
+  "profiles": [
+    {
+      "enabled": true,
+      "login": "JUHOSEOK",
+      "profile_url": "https://github.com/JUHOSEOK",
+      "display_name": "JUHOSEOK",
+      "bio": "",
+      "intro": "",
+      "avatar_url": "https://avatars.githubusercontent.com/u/262737559?v=4",
+      "reason": ""
+    },
+    {
+      "enabled": true,
+      "login": "hos0ek71",
+      "profile_url": "https://github.com/hos0ek71",
+      "display_name": "JuHoSoek",
+      "bio": "",
+      "intro": "jhseok0107@gmail.com",
+      "avatar_url": "https://avatars.githubusercontent.com/u/86303497?v=4",
+      "reason": ""
+    }
+  ],
+  "reason": ""
+}
