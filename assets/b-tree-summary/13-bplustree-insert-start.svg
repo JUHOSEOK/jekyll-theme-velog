@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="157" height="100" viewBox="0 0 157 100">
+<defs>
+<marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+<polygon points="0 0, 10 3.5, 0 7" fill="#2a6f97"/>
+</marker>
+</defs>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<rect x="28.0" y="6.0" width="101" height="44" rx="10" ry="10" fill="#1d3557" stroke="#1d3557" stroke-width="2"/>
+<text x="78.5" y="29.0" text-anchor="middle" dominant-baseline="middle" font-family="Arial, sans-serif" font-size="18" font-weight="600" fill="#ffffff">10 | 20</text>
+</svg>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="813" height="284" viewBox="0 0 813 284">
+<defs>
+<marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+<polygon points="0 0, 10 3.5, 0 7" fill="#2a6f97"/>
+</marker>
+</defs>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<path d="M 406.5 50.0 L 406.5 74.0 L 148.5 74.0 L 148.5 98.0" fill="none" stroke="#5b6573" stroke-width="2"/>
+<path d="M 406.5 50.0 L 406.5 74.0 L 412.0 74.0 L 412.0 98.0" fill="none" stroke="#5b6573" stroke-width="2"/>
+<path d="M 406.5 50.0 L 406.5 74.0 L 670.0 74.0 L 670.0 98.0" fill="none" stroke="#5b6573" stroke-width="2"/>
+<path d="M 148.5 142.0 L 148.5 166.0 L 89.5 166.0 L 89.5 190.0" fill="none" stroke="#5b6573" stroke-width="2"/>
+<path d="M 148.5 142.0 L 148.5 166.0 L 224.0 166.0 L 224.0 190.0" fill="none" stroke="#5b6573" stroke-width="2"/>
+<path d="M 412.0 142.0 L 412.0 166.0 L 347.5 166.0 L 347.5 190.0" fill="none" stroke="#5b6573" stroke-width="2"/>
+<path d="M 412.0 142.0 L 412.0 166.0 L 476.5 166.0 L 476.5 190.0" fill="none" stroke="#5b6573" stroke-width="2"/>
+<path d="M 670.0 142.0 L 670.0 166.0 L 605.5 166.0 L 605.5 190.0" fill="none" stroke="#5b6573" stroke-width="2"/>
+<path d="M 670.0 142.0 L 670.0 166.0 L 734.5 166.0 L 734.5 190.0" fill="none" stroke="#5b6573" stroke-width="2"/>
+<line x1="157.0" y1="212.0" x2="169.0" y2="212.0" stroke="#2a6f97" stroke-width="3" stroke-dasharray="8 6" marker-end="url(#arrowhead)"/>
+<line x1="275.0" y1="212.0" x2="287.0" y2="212.0" stroke="#2a6f97" stroke-width="3" stroke-dasharray="8 6" marker-end="url(#arrowhead)"/>
+<line x1="404.0" y1="212.0" x2="416.0" y2="212.0" stroke="#2a6f97" stroke-width="3" stroke-dasharray="8 6" marker-end="url(#arrowhead)"/>
+<line x1="533.0" y1="212.0" x2="545.0" y2="212.0" stroke="#2a6f97" stroke-width="3" stroke-dasharray="8 6" marker-end="url(#arrowhead)"/>
+<line x1="662.0" y1="212.0" x2="674.0" y2="212.0" stroke="#2a6f97" stroke-width="3" stroke-dasharray="8 6" marker-end="url(#arrowhead)"/>
+<rect x="356.0" y="6.0" width="101" height="44" rx="10" ry="10" fill="#1d3557" stroke="#1d3557" stroke-width="2"/>
+<text x="406.5" y="29.0" text-anchor="middle" dominant-baseline="middle" font-family="Arial, sans-serif" font-size="18" font-weight="600" fill="#ffffff">15 | 50</text>
+<rect x="122.5" y="98.0" width="52" height="44" rx="10" ry="10" fill="#eef6ff" stroke="#457b9d" stroke-width="2"/>
+<text x="148.5" y="121.0" text-anchor="middle" dominant-baseline="middle" font-family="Arial, sans-serif" font-size="18" font-weight="600" fill="#16324f">8</text>
+<rect x="386.0" y="98.0" width="52" height="44" rx="10" ry="10" fill="#eef6ff" stroke="#457b9d" stroke-width="2"/>
+<text x="412.0" y="121.0" text-anchor="middle" dominant-baseline="middle" font-family="Arial, sans-serif" font-size="18" font-weight="600" fill="#16324f">30</text>
+<rect x="644.0" y="98.0" width="52" height="44" rx="10" ry="10" fill="#eef6ff" stroke="#457b9d" stroke-width="2"/>
+<text x="670.0" y="121.0" text-anchor="middle" dominant-baseline="middle" font-family="Arial, sans-serif" font-size="18" font-weight="600" fill="#16324f">70</text>
+<rect x="28.0" y="190.0" width="123" height="44" rx="10" ry="10" fill="#fff4dd" stroke="#e9a400" stroke-width="2"/>
+<text x="89.5" y="213.0" text-anchor="middle" dominant-baseline="middle" font-family="Arial, sans-serif" font-size="18" font-weight="600" fill="#5c3b00">1 | 5 | 7</text>
+<rect x="179.0" y="190.0" width="90" height="44" rx="10" ry="10" fill="#fff4dd" stroke="#e9a400" stroke-width="2"/>
+<text x="224.0" y="213.0" text-anchor="middle" dominant-baseline="middle" font-family="Arial, sans-serif" font-size="18" font-weight="600" fill="#5c3b00">8 | 10</text>
+<rect x="297.0" y="190.0" width="101" height="44" rx="10" ry="10" fill="#fff4dd" stroke="#e9a400" stroke-width="2"/>
+<text x="347.5" y="213.0" text-anchor="middle" dominant-baseline="middle" font-family="Arial, sans-serif" font-size="18" font-weight="600" fill="#5c3b00">15 | 20</text>
+<rect x="426.0" y="190.0" width="101" height="44" rx="10" ry="10" fill="#fff4dd" stroke="#e9a400" stroke-width="2"/>
+<text x="476.5" y="213.0" text-anchor="middle" dominant-baseline="middle" font-family="Arial, sans-serif" font-size="18" font-weight="600" fill="#5c3b00">30 | 40</text>
+<rect x="555.0" y="190.0" width="101" height="44" rx="10" ry="10" fill="#fff4dd" stroke="#e9a400" stroke-width="2"/>
+<text x="605.5" y="213.0" text-anchor="middle" dominant-baseline="middle" font-family="Arial, sans-serif" font-size="18" font-weight="600" fill="#5c3b00">50 | 60</text>
+<rect x="684.0" y="190.0" width="101" height="44" rx="10" ry="10" fill="#fff4dd" stroke="#e9a400" stroke-width="2"/>
+<text x="734.5" y="213.0" text-anchor="middle" dominant-baseline="middle" font-family="Arial, sans-serif" font-size="18" font-weight="600" fill="#5c3b00">70 | 90</text>
+</svg>
