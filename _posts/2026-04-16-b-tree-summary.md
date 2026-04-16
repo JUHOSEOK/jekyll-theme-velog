@@ -10,13 +10,11 @@ tags:
   - Database
 ---
 
-출처: [자료구조 4. Tree](https://velog.io/@thkim0408/%EC%9E%90%EB%A3%8C%EA%B5%AC%EC%A1%B0-4.-Tree)
-
-올려준 초안을 바탕으로, 중복 설명과 오타를 정리하고 그림을 SVG 다이어그램으로 다시 그린 버전이다.
 
 ## 1. 먼저, BST부터
 
 ### 핵심 용어
+![트리 기본 용어 도식]({{ '/assets/b-tree-summary/00-bst.png' | relative_url }})
 
 - 차수: 한 노드가 가질 수 있는 최대 자식 수
 - 서브트리: 특정 노드와 그 자손들로 이루어진 하위 트리
