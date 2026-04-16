@@ -14,6 +14,7 @@ PROFILE_PATH = File.join(ROOT_DIR, "_data", "profile.yml")
 THEME_PATH = File.join(ROOT_DIR, "_data", "theme.yml")
 OUTPUT_PATH = File.join(ROOT_DIR, "_data", "github_contributions_cache.json")
 PROFILE_OUTPUT_PATH = File.join(ROOT_DIR, "_data", "github_profile_cache.json")
+PROFILES_OUTPUT_PATH = File.join(ROOT_DIR, "_data", "github_profiles_cache.json")
 FAVICON_OUTPUT_PATH = File.join(ROOT_DIR, "assets", "images", "favicon.png")
 GRAPHQL_ENDPOINT = URI("https://api.github.com/graphql")
 REST_API_ENDPOINT = "https://api.github.com/users"
@@ -148,6 +149,14 @@ def placeholder_profile_payload(login:, profile_url:, reason:)
     "bio" => "",
     "intro" => "",
     "avatar_url" => "",
+    "reason" => reason
+  }
+end
+
+def profiles_payload(profiles:, reason:)
+  {
+    "enabled" => profiles.any? { |profile| profile["enabled"] },
+    "profiles" => profiles,
     "reason" => reason
   }
 end
@@ -486,16 +495,24 @@ if !profile_sync_enabled
     PROFILE_OUTPUT_PATH,
     placeholder_profile_payload(login: primary_login, profile_url: profile_url, reason: "disabled")
   )
+  write_payload(PROFILES_OUTPUT_PATH, profiles_payload(profiles: [], reason: "disabled"))
 elsif primary_login.empty?
   write_payload(
     PROFILE_OUTPUT_PATH,
     placeholder_profile_payload(login: "", profile_url: "", reason: "missing_username")
   )
+  write_payload(PROFILES_OUTPUT_PATH, profiles_payload(profiles: [], reason: "missing_username"))
 else
-  profile_payload = fetch_github_profile(login: primary_login, profile_url: profile_url, token: token)
-  write_payload(PROFILE_OUTPUT_PATH, profile_payload)
-  if profile_payload["enabled"] && !profile_payload["avatar_url"].to_s.strip.empty?
-    sync_favicon_png(avatar_url: profile_payload["avatar_url"], output_path: FAVICON_OUTPUT_PATH)
+  profile_payloads = logins.map do |login|
+    fetch_github_profile(login: login, profile_url: "https://github.com/#{login}", token: token)
+  end
+  primary_profile_payload = profile_payloads.find { |payload| payload["login"] == primary_login } || profile_payloads.first
+
+  write_payload(PROFILE_OUTPUT_PATH, primary_profile_payload)
+  write_payload(PROFILES_OUTPUT_PATH, profiles_payload(profiles: profile_payloads, reason: ""))
+
+  if primary_profile_payload["enabled"] && !primary_profile_payload["avatar_url"].to_s.strip.empty?
+    sync_favicon_png(avatar_url: primary_profile_payload["avatar_url"], output_path: FAVICON_OUTPUT_PATH)
   end
 end
 

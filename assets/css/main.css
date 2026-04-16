@@ -326,6 +326,66 @@ html[data-theme="dark"] .theme-toggle__moon {
   flex-wrap: wrap;
 }
 
+.profile__accounts {
+  margin-top: 1rem;
+}
+
+.profile__accounts-title {
+  margin: 0 0 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text3);
+}
+
+.profile__accounts-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+}
+
+.profile__account-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--border4);
+  border-radius: 1rem;
+  background: var(--bg-element1);
+  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.profile__account-card:hover {
+  border-color: var(--primary2);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+}
+
+.profile__account-avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.profile__account-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.profile__account-name {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text1);
+}
+
+.profile__account-login {
+  font-size: 0.8125rem;
+  color: var(--text3);
+}
+
 .profile__stat {
   display: flex;
   align-items: baseline;
@@ -1554,6 +1614,14 @@ html[data-theme="dark"] {
 
   .profile__intro {
     font-size: 0.875rem;
+  }
+
+  .profile__accounts-list {
+    gap: 0.5rem;
+  }
+
+  .profile__account-card {
+    width: 100%;
   }
 
   .profile__separator {

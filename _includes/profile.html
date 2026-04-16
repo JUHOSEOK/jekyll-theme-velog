@@ -1,6 +1,7 @@
 {% assign theme = site.data.theme %}
 {% assign series_count = site.posts | where_exp: "post", "post.series" | group_by: "series" | size %}
 {% assign github_profile = site.data.github_profile_cache %}
+{% assign github_profiles = site.data.github_profiles_cache.profiles %}
 {% assign configured_login = site.data.theme.hero.github_contributions.username | default: "" %}
 {% assign fallback_github_url = site.data.profile.github | default: "" %}
 {% if configured_login == "" and fallback_github_url contains 'github.com/' %}
@@ -61,6 +62,37 @@
             <div class="profile__stat">
               <span class="profile__stat-value">{{ series_count }}</span>
               <span class="profile__stat-label">{{ theme.labels.series }}</span>
+            </div>
+          </div>
+        {% endif %}
+
+        {% if github_profiles %}
+          <div class="profile__accounts">
+            <p class="profile__accounts-title">운영 GitHub 계정</p>
+            <div class="profile__accounts-list">
+              {% for account_profile in github_profiles %}
+                {% if account_profile.enabled %}
+                  <a class="profile__account-card" href="{{ account_profile.profile_url }}" target="_blank" rel="noreferrer">
+                    <img
+                      class="profile__account-avatar"
+                      src="{{ account_profile.avatar_url }}"
+                      alt="{{ account_profile.display_name | default: account_profile.login }}"
+                      width="40"
+                      height="40"
+                    >
+                    <span class="profile__account-body">
+                      <span class="profile__account-name">
+                        {% if account_profile.display_name != "" %}
+                          {{ account_profile.display_name }}
+                        {% else %}
+                          {{ account_profile.login }}
+                        {% endif %}
+                      </span>
+                      <span class="profile__account-login">@{{ account_profile.login }}</span>
+                    </span>
+                  </a>
+                {% endif %}
+              {% endfor %}
             </div>
           </div>
         {% endif %}
