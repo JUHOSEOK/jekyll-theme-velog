@@ -24,26 +24,7 @@
       {% endif %}
     {% endif %}
 
-    <a class="header-logo" href="{{ '/' | relative_url }}" aria-label="{{ header_title }}">
-      {% if header_avatar contains '://' %}
-        <img
-          class="header-logo__mark header-logo__mark--avatar"
-          src="{{ header_avatar }}"
-          alt=""
-          width="36"
-          height="36"
-        >
-      {% else %}
-        <img
-          class="header-logo__mark header-logo__mark--avatar"
-          src="{{ header_avatar | relative_url }}"
-          alt=""
-          width="36"
-          height="36"
-        >
-      {% endif %}
-      <span class="header-logo__text">{{ header_title }}</span>
-    </a>
+ 
 
     {% assign show_github_link = theme.header.show_github_link | default: true %}
     {% assign show_rss_link = theme.header.show_rss_link | default: true %}
