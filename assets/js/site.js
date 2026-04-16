@@ -645,8 +645,56 @@
     }
   }
 
+  function setupGitHubContributionGraph() {
+    var graphs = document.querySelectorAll("[data-github-graph]");
+
+    graphs.forEach(function (graph) {
+      var buttons = Array.prototype.slice.call(graph.querySelectorAll("[data-github-graph-year]"));
+      var panels = Array.prototype.slice.call(graph.querySelectorAll("[data-github-graph-panel]"));
+      var summary = graph.querySelector(".github-graph__summary");
+
+      function setActiveYear(year) {
+        buttons.forEach(function (button) {
+          var isActive = button.getAttribute("data-year") === year;
+          button.classList.toggle("is-active", isActive);
+          button.setAttribute("aria-selected", isActive ? "true" : "false");
+        });
+
+        panels.forEach(function (panel) {
+          var isActive = panel.getAttribute("data-year") === year;
+          var panelSummary;
+
+          panel.classList.toggle("is-active", isActive);
+          panel.hidden = !isActive;
+
+          if (!isActive || !summary) {
+            return;
+          }
+
+          panelSummary = panel.getAttribute("data-summary-label");
+          if (panelSummary) {
+            summary.textContent = panelSummary;
+          }
+        });
+      }
+
+      if (buttons.length === 0 || panels.length === 0) {
+        return;
+      }
+
+      buttons.forEach(function (button) {
+        button.addEventListener("click", function () {
+          setActiveYear(button.getAttribute("data-year"));
+        });
+      });
+
+      setActiveYear(buttons[0].getAttribute("data-year"));
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     setupAlgoliaSearch();
+    setupGitHubContributionGraph();
     setupGiscusThemeSync();
     setupSearchForm();
     setupThemeToggle();

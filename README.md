@@ -106,12 +106,18 @@ home:
 hero:
   github_contributions:
     enabled: true
-    username: your-github-id
+    username: your-primary-github-id
+    usernames:
+      - your-primary-github-id
+      - team-member-github-id
+    years: 3
 
 profile:
   github_sync:
     enabled: true
 ```
+
+`username`는 프로필 동기화와 헤더에 쓸 대표 계정이고, `usernames`는 홈에 각각 따로 보여줄 잔디 계정 목록입니다. `years`를 늘리면 각 계정 그래프를 연도별로 전환할 수 있습니다.
 
 ### _data/profile.yml
 

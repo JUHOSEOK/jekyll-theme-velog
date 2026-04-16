@@ -26,6 +26,10 @@ hero:
   github_contributions:
     enabled: true
     username: "JUHOSEOK"
+    usernames:
+      - "JUHOSEOK"
+      - "hos0ek71"
+    years: 3
 
 profile:
   github_sync:

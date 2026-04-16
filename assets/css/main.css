@@ -346,16 +346,57 @@ html[data-theme="dark"] .theme-toggle__moon {
   color: var(--text3);
 }
 
+.github-graphs {
+  margin-top: 1.125rem;
+}
+
+.github-graphs__title {
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text2);
+}
+
+.github-graphs__list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
 .github-graph {
   margin-top: 1.125rem;
 }
 
+.github-graph--account {
+  margin-top: 0;
+}
+
+.github-graph__account-link {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--text1);
+}
+
+.github-graph__account-link:hover {
+  color: var(--primary2);
+}
+
 .github-graph__header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 1rem;
   margin-bottom: 0.625rem;
+}
+
+.github-graph__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .github-graph__summary {
@@ -363,6 +404,12 @@ html[data-theme="dark"] .theme-toggle__moon {
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--text2);
+}
+
+.github-graph__accounts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
 }
 
 .github-graph__link {
@@ -374,6 +421,42 @@ html[data-theme="dark"] .theme-toggle__moon {
 
 .github-graph__link:hover {
   color: var(--primary2);
+}
+
+.github-graph__years {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.github-graph__year-button {
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--border3);
+  border-radius: 999px;
+  background: var(--bg-element1);
+  color: var(--text2);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.github-graph__year-button:hover {
+  border-color: var(--primary2);
+  color: var(--primary2);
+}
+
+.github-graph__year-button.is-active {
+  border-color: var(--primary2);
+  background: var(--bg-element2);
+  background: color-mix(in srgb, var(--primary2) 12%, transparent);
+  color: var(--primary2);
+}
+
+.github-graph__panel[hidden] {
+  display: none;
 }
 
 .github-graph__scroll {
@@ -1486,6 +1569,10 @@ html[data-theme="dark"] {
   .github-graph__footer {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .github-graph__years {
+    margin-left: 0;
   }
 
   .github-graph__legend {

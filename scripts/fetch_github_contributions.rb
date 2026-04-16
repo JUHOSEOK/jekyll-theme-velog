@@ -17,11 +17,37 @@ PROFILE_OUTPUT_PATH = File.join(ROOT_DIR, "_data", "github_profile_cache.json")
 FAVICON_OUTPUT_PATH = File.join(ROOT_DIR, "assets", "images", "favicon.png")
 GRAPHQL_ENDPOINT = URI("https://api.github.com/graphql")
 REST_API_ENDPOINT = "https://api.github.com/users"
+GRAPHQL_QUERY = <<~GRAPHQL
+  query($login: String!, $from: DateTime!, $to: DateTime!) {
+    user(login: $login) {
+      contributionsCollection(from: $from, to: $to) {
+        contributionCalendar {
+          totalContributions
+          weeks {
+            contributionDays {
+              contributionCount
+              date
+              weekday
+            }
+          }
+        }
+      }
+    }
+  }
+GRAPHQL
 
 def load_yaml(path)
   return {} unless File.exist?(path)
 
   YAML.safe_load(File.read(path), permitted_classes: [Date, Time], aliases: true) || {}
+end
+
+def load_json(path)
+  return {} unless File.exist?(path)
+
+  JSON.parse(File.read(path))
+rescue JSON::ParserError
+  {}
 end
 
 def write_payload(path, payload)
@@ -83,12 +109,30 @@ rescue Errno::ENOENT
   ""
 end
 
-def placeholder_payload(title:, login:, profile_url:, reason:)
+def placeholder_year_payload(year:, from_date:, to_date:, account_count:)
+  {
+    "year" => year,
+    "from" => from_date.iso8601,
+    "to" => to_date.iso8601,
+    "range_label" => "#{from_date.strftime('%Y.%m.%d')} ~ #{to_date.strftime('%Y.%m.%d')}",
+    "summary_label" => summary_label(year: year, total_contributions: 0, account_count: account_count),
+    "total_contributions" => 0,
+    "account_count" => account_count,
+    "months" => [],
+    "weeks" => []
+  }
+end
+
+def placeholder_payload(title:, primary_login:, accounts:, reason:)
   {
     "enabled" => false,
     "title" => title,
-    "login" => login,
-    "profile_url" => profile_url,
+    "login" => primary_login,
+    "profile_url" => primary_login.to_s.empty? ? "" : "https://github.com/#{primary_login}",
+    "accounts" => accounts,
+    "account_graphs" => [],
+    "available_years" => [],
+    "years" => [],
     "reason" => reason,
     "weeks" => [],
     "months" => []
@@ -113,8 +157,36 @@ def tooltip_label(date_string, contribution_count)
   "#{date.strftime('%Y년 %-m월 %-d일')} · #{contribution_count}회 기여"
 end
 
+def summary_label(year:, total_contributions:, account_count:)
+  if account_count > 1
+    "#{year}년 #{account_count}개 계정 합산 #{total_contributions}회 기여"
+  else
+    "#{year}년 #{total_contributions}회 기여"
+  end
+end
+
 def strict_mode?
   ENV["GITHUB_CONTRIBUTIONS_STRICT"] == "1" || ENV.key?("CI") || ENV.key?("JENKINS_HOME")
+end
+
+def parse_login_from_github_url(value)
+  value.to_s[%r{\Ahttps://github\.com/([^/?#]+)}, 1].to_s.strip
+end
+
+def resolve_usernames(settings:, profile:)
+  explicit_primary = settings["username"].to_s.strip
+  fallback_login = parse_login_from_github_url(profile["github"])
+  primary_login = explicit_primary.empty? ? fallback_login : explicit_primary
+
+  configured_usernames = Array(settings["usernames"])
+    .map { |value| value.to_s.strip }
+    .reject(&:empty?)
+
+  usernames = configured_usernames.dup
+  usernames.unshift(primary_login) unless primary_login.empty?
+  usernames.uniq!
+
+  [primary_login, usernames]
 end
 
 def fetch_github_profile(login:, profile_url:, token:)
@@ -152,6 +224,245 @@ rescue JSON::ParserError
   placeholder_profile_payload(login: login, profile_url: profile_url, reason: "invalid_response")
 end
 
+def build_year_ranges(year_count:, now:)
+  current_year = now.year
+
+  Array.new(year_count) do |index|
+    year = current_year - index
+    from_date = Date.new(year, 1, 1)
+    to_date = year == current_year ? now.to_date : Date.new(year, 12, 31)
+
+    {
+      year: year,
+      from_date: from_date,
+      to_date: to_date,
+      from_time: Time.new(from_date.year, from_date.month, from_date.day, 0, 0, 0, now.utc_offset),
+      to_time: if year == current_year
+                 now
+               else
+                 Time.new(to_date.year, to_date.month, to_date.day, 23, 59, 59, now.utc_offset)
+               end
+    }
+  end
+end
+
+def fetch_contribution_calendar(login:, from_time:, to_time:, token:)
+  request = Net::HTTP::Post.new(GRAPHQL_ENDPOINT)
+  request["Authorization"] = "bearer #{token}"
+  request["Content-Type"] = "application/json"
+  request["User-Agent"] = "velog-jekyll-theme"
+  request.body = JSON.generate(
+    {
+      query: GRAPHQL_QUERY,
+      variables: {
+        login: login,
+        from: from_time.iso8601,
+        to: to_time.iso8601
+      }
+    }
+  )
+
+  http = Net::HTTP.new(GRAPHQL_ENDPOINT.host, GRAPHQL_ENDPOINT.port)
+  http.use_ssl = true
+  response = http.request(request)
+
+  return [nil, "request_failed_#{response.code}"] unless response.is_a?(Net::HTTPSuccess)
+
+  body = JSON.parse(response.body)
+  return [nil, "graphql_error"] if body["errors"]
+
+  calendar = body.dig("data", "user", "contributionsCollection", "contributionCalendar")
+  return [nil, "missing_calendar"] if calendar.nil?
+
+  [calendar, nil]
+rescue JSON::ParserError
+  [nil, "invalid_response"]
+end
+
+def build_date_counts(calendar)
+  counts = Hash.new(0)
+
+  calendar.fetch("weeks", []).each do |week|
+    week.fetch("contributionDays", []).each do |day|
+      counts[day.fetch("date")] += day.fetch("contributionCount").to_i
+    end
+  end
+
+  counts
+end
+
+def contribution_level(count, max_count)
+  return "NONE" if count <= 0 || max_count <= 0
+
+  ratio = count.to_f / max_count
+  return "FIRST_QUARTILE" if ratio <= 0.25
+  return "SECOND_QUARTILE" if ratio <= 0.5
+  return "THIRD_QUARTILE" if ratio <= 0.75
+
+  "FOURTH_QUARTILE"
+end
+
+def build_months(start_date:, end_date:)
+  months = []
+  current_week = 1
+  current_month = nil
+  date = start_date
+
+  while date <= end_date
+    if date != start_date && date.wday.zero?
+      current_week += 1
+    end
+
+    month_key = [date.year, date.month]
+    if current_month.nil? || current_month[:key] != month_key
+      if current_month
+        current_month[:payload]["total_weeks"] = current_week - current_month[:payload]["start_week"] + 1
+        months << current_month[:payload]
+      end
+
+      current_month = {
+        key: month_key,
+        payload: {
+          "label" => "#{date.month}월",
+          "start_week" => current_week,
+          "total_weeks" => 1,
+          "year" => date.year
+        }
+      }
+    end
+
+    date += 1
+  end
+
+  if current_month
+    current_month[:payload]["total_weeks"] = current_week - current_month[:payload]["start_week"] + 1
+    months << current_month[:payload]
+  end
+
+  months
+end
+
+def build_weeks(start_date:, end_date:, counts:)
+  weeks = []
+  week_start = start_date
+  padded_days = Array.new(7) { { "is_padding" => true } }
+  max_count = counts.values.max.to_i
+  date = start_date
+
+  while date <= end_date
+    if date != start_date && date.wday.zero?
+      weeks << { "first_day" => week_start.iso8601, "days" => padded_days }
+      week_start = date
+      padded_days = Array.new(7) { { "is_padding" => true } }
+    end
+
+    date_string = date.iso8601
+    count = counts.fetch(date_string, 0)
+    padded_days[date.wday] = {
+      "is_padding" => false,
+      "date" => date_string,
+      "count" => count,
+      "level" => contribution_level(count, max_count),
+      "tooltip" => tooltip_label(date_string, count)
+    }
+
+    date += 1
+  end
+
+  weeks << { "first_day" => week_start.iso8601, "days" => padded_days }
+  weeks
+end
+
+def build_year_payload(year_range:, calendars:, accounts:)
+  aggregate_counts = Hash.new(0)
+  total_contributions = 0
+
+  calendars.each do |calendar|
+    total_contributions += calendar.fetch("totalContributions").to_i
+    build_date_counts(calendar).each do |date, count|
+      aggregate_counts[date] += count
+    end
+  end
+
+  {
+    "year" => year_range.fetch(:year),
+    "from" => year_range.fetch(:from_date).iso8601,
+    "to" => year_range.fetch(:to_date).iso8601,
+    "range_label" => "#{year_range.fetch(:from_date).strftime('%Y.%m.%d')} ~ #{year_range.fetch(:to_date).strftime('%Y.%m.%d')}",
+    "summary_label" => summary_label(
+      year: year_range.fetch(:year),
+      total_contributions: total_contributions,
+      account_count: accounts.size
+    ),
+    "total_contributions" => total_contributions,
+    "account_count" => accounts.size,
+    "accounts" => accounts,
+    "months" => build_months(start_date: year_range.fetch(:from_date), end_date: year_range.fetch(:to_date)),
+    "weeks" => build_weeks(
+      start_date: year_range.fetch(:from_date),
+      end_date: year_range.fetch(:to_date),
+      counts: aggregate_counts
+    )
+  }
+end
+
+def enrich_payload_with_active_year(payload)
+  active_year = payload["years"].find { |year_payload| year_payload["weeks"] && !year_payload["weeks"].empty? }
+  active_year ||= payload["years"].first
+  return payload if active_year.nil?
+
+  payload.merge(
+    "profile_url" => payload["login"].to_s.empty? ? "" : "https://github.com/#{payload['login']}",
+    "range_label" => active_year["range_label"],
+    "summary_label" => active_year["summary_label"],
+    "total_contributions" => active_year["total_contributions"],
+    "months" => active_year["months"],
+    "weeks" => active_year["weeks"]
+  )
+end
+
+def build_account_graph(login:, year_ranges:, token:)
+  profile_url = "https://github.com/#{login}"
+  years = []
+  failures = []
+
+  year_ranges.each do |year_range|
+    calendar, reason = fetch_contribution_calendar(
+      login: login,
+      from_time: year_range.fetch(:from_time),
+      to_time: year_range.fetch(:to_time),
+      token: token
+    )
+
+    if calendar
+      years << build_year_payload(
+        year_range: year_range,
+        calendars: [calendar],
+        accounts: [{ "login" => login, "profile_url" => profile_url }]
+      )
+    else
+      failures << { "login" => login, "year" => year_range.fetch(:year), "reason" => reason }
+      years << placeholder_year_payload(
+        year: year_range.fetch(:year),
+        from_date: year_range.fetch(:from_date),
+        to_date: year_range.fetch(:to_date),
+        account_count: 1
+      )
+    end
+  end
+
+  graph = enrich_payload_with_active_year(
+    {
+      "login" => login,
+      "profile_url" => profile_url,
+      "available_years" => years.map { |year_payload| year_payload["year"] },
+      "years" => years
+    }
+  )
+
+  [graph, failures]
+end
+
 config = load_yaml(CONFIG_PATH)
 profile = load_yaml(PROFILE_PATH)
 theme = load_yaml(THEME_PATH)
@@ -161,16 +472,15 @@ title = settings["title"].to_s.strip
 title = "GitHub 기여 그래프" if title.empty?
 enabled = settings.fetch("enabled", false)
 profile_sync_enabled = profile_sync_settings.fetch("enabled", true)
+years_to_fetch = settings["years"].to_i
+years_to_fetch = 1 if years_to_fetch <= 0
 
 ENV["TZ"] = config["timezone"].to_s unless config["timezone"].to_s.empty?
 
-login = settings["username"].to_s.strip
-if login.empty?
-  github_url = profile["github"].to_s
-  login = github_url[%r{\Ahttps://github\.com/([^/?#]+)}, 1].to_s
-end
+primary_login, logins = resolve_usernames(settings: settings, profile: profile)
+profile_url = primary_login.empty? ? "" : "https://github.com/#{primary_login}"
+accounts = logins.map { |login| { "login" => login, "profile_url" => "https://github.com/#{login}" } }
 
-profile_url = login.empty? ? "" : "https://github.com/#{login}"
 token = ENV["GITHUB_GRAPHQL_TOKEN"].to_s.strip
 token = ENV["GITHUB_TOKEN"].to_s.strip if token.empty?
 token = gh_token if token.empty?
@@ -178,15 +488,15 @@ token = gh_token if token.empty?
 if !profile_sync_enabled
   write_payload(
     PROFILE_OUTPUT_PATH,
-    placeholder_profile_payload(login: login, profile_url: profile_url, reason: "disabled")
+    placeholder_profile_payload(login: primary_login, profile_url: profile_url, reason: "disabled")
   )
-elsif login.empty?
+elsif primary_login.empty?
   write_payload(
     PROFILE_OUTPUT_PATH,
     placeholder_profile_payload(login: "", profile_url: "", reason: "missing_username")
   )
 else
-  profile_payload = fetch_github_profile(login: login, profile_url: profile_url, token: token)
+  profile_payload = fetch_github_profile(login: primary_login, profile_url: profile_url, token: token)
   write_payload(PROFILE_OUTPUT_PATH, profile_payload)
   if profile_payload["enabled"] && !profile_payload["avatar_url"].to_s.strip.empty?
     sync_favicon_png(avatar_url: profile_payload["avatar_url"], output_path: FAVICON_OUTPUT_PATH)
@@ -198,8 +508,8 @@ unless enabled
     OUTPUT_PATH,
     placeholder_payload(
       title: title,
-      login: login,
-      profile_url: profile_url,
+      primary_login: primary_login,
+      accounts: accounts,
       reason: "disabled"
     )
   )
@@ -207,167 +517,68 @@ unless enabled
   exit 0
 end
 
-if login.empty?
-  payload = placeholder_payload(title: title, login: "", profile_url: "", reason: "missing_username")
+if logins.empty?
+  payload = placeholder_payload(title: title, primary_login: "", accounts: [], reason: "missing_username")
   write_payload(OUTPUT_PATH, payload)
-  abort "GitHub contributions username is missing." if strict_mode?
-  puts "GitHub contributions username is missing. Skipping graph."
+  abort "GitHub contributions usernames are missing." if strict_mode?
+  puts "GitHub contributions usernames are missing. Skipping graph."
   exit 0
 end
 
 if token.empty?
-  payload = placeholder_payload(title: title, login: login, profile_url: profile_url, reason: "missing_token")
+  if File.exist?(OUTPUT_PATH)
+    existing_payload = load_json(OUTPUT_PATH)
+    if existing_payload.is_a?(Hash) && !existing_payload.empty?
+      puts "GitHub token is missing. Keeping existing contributions cache."
+      exit 0
+    end
+  end
+
+  payload = placeholder_payload(title: title, primary_login: primary_login, accounts: accounts, reason: "missing_token")
   write_payload(OUTPUT_PATH, payload)
   abort "GitHub token is missing. Set GITHUB_GRAPHQL_TOKEN or log in with gh auth." if strict_mode?
   puts "GitHub token is missing. Skipping graph fetch."
   exit 0
 end
 
-to_time = Time.now
-from_time = to_time - (365 * 24 * 60 * 60)
+now = Time.now
+year_ranges = build_year_ranges(year_count: years_to_fetch, now: now)
+account_graphs = []
+failed_requests = []
 
-query = <<~GRAPHQL
-  query($login: String!, $from: DateTime!, $to: DateTime!) {
-    user(login: $login) {
-      contributionsCollection(from: $from, to: $to) {
-        contributionCalendar {
-          totalContributions
-          weeks {
-            firstDay
-            contributionDays {
-              contributionCount
-              contributionLevel
-              date
-              weekday
-            }
-          }
-          months {
-            name
-            firstDay
-            totalWeeks
-            year
-          }
-        }
-      }
-    }
-  }
-GRAPHQL
-
-request = Net::HTTP::Post.new(GRAPHQL_ENDPOINT)
-request["Authorization"] = "bearer #{token}"
-request["Content-Type"] = "application/json"
-request["User-Agent"] = "velog-jekyll-theme"
-request.body = JSON.generate(
-  {
-    query: query,
-    variables: {
-      login: login,
-      from: from_time.iso8601,
-      to: to_time.iso8601
-    }
-  }
-)
-
-http = Net::HTTP.new(GRAPHQL_ENDPOINT.host, GRAPHQL_ENDPOINT.port)
-http.use_ssl = true
-response = http.request(request)
-
-unless response.is_a?(Net::HTTPSuccess)
-  write_payload(
-    OUTPUT_PATH,
-    placeholder_payload(
-      title: title,
-      login: login,
-      profile_url: profile_url,
-      reason: "request_failed"
-    )
-  )
-  abort "GitHub contributions request failed: HTTP #{response.code}" if strict_mode?
-  puts "GitHub contributions request failed: HTTP #{response.code}"
-  exit 0
+logins.each do |login|
+  account_graph, account_failures = build_account_graph(login: login, year_ranges: year_ranges, token: token)
+  account_graphs << account_graph
+  failed_requests.concat(account_failures)
 end
 
-body = JSON.parse(response.body)
-
-if body["errors"]
-  write_payload(
-    OUTPUT_PATH,
-    placeholder_payload(
-      title: title,
-      login: login,
-      profile_url: profile_url,
-      reason: "graphql_error"
-    )
+if account_graphs.all? { |account_graph| account_graph["years"].all? { |year_payload| year_payload["weeks"].empty? } }
+  payload = placeholder_payload(
+    title: title,
+    primary_login: primary_login,
+    accounts: accounts,
+    reason: failed_requests.empty? ? "missing_calendar" : failed_requests.first.fetch("reason")
   )
-  abort "GitHub contributions query failed: #{body['errors'].map { |error| error['message'] }.join(', ')}" if strict_mode?
-  puts "GitHub contributions query failed."
-  exit 0
-end
-
-calendar = body.dig("data", "user", "contributionsCollection", "contributionCalendar")
-
-if calendar.nil?
-  write_payload(
-    OUTPUT_PATH,
-    placeholder_payload(
-      title: title,
-      login: login,
-      profile_url: profile_url,
-      reason: "missing_calendar"
-    )
-  )
-  abort "GitHub contributions calendar is unavailable for #{login}." if strict_mode?
+  write_payload(OUTPUT_PATH, payload)
+  abort "GitHub contributions calendar is unavailable for #{logins.join(', ')}." if strict_mode?
   puts "GitHub contributions calendar is unavailable."
   exit 0
 end
 
-weeks = calendar.fetch("weeks", []).map do |week|
-  padded_days = Array.new(7) { { "is_padding" => true } }
-
-  week.fetch("contributionDays", []).each do |day|
-    padded_days[day.fetch("weekday")] = {
-      "is_padding" => false,
-      "date" => day.fetch("date"),
-      "count" => day.fetch("contributionCount"),
-      "level" => day.fetch("contributionLevel"),
-      "tooltip" => tooltip_label(day.fetch("date"), day.fetch("contributionCount"))
-    }
-  end
-
+payload = enrich_payload_with_active_year(
   {
-    "first_day" => week.fetch("firstDay"),
-    "days" => padded_days
+    "enabled" => true,
+    "title" => title,
+    "login" => primary_login,
+    "accounts" => accounts,
+    "account_graphs" => account_graphs,
+    "fetched_at" => now.iso8601,
+    "updated_label" => "마지막 동기화 #{now.strftime('%Y.%m.%d %H:%M')}",
+    "available_years" => year_ranges.map { |year_range| year_range.fetch(:year) },
+    "years" => [],
+    "errors" => failed_requests
   }
-end
-
-start_week = 1
-months = calendar.fetch("months", []).map do |month|
-  label = "#{Date.parse(month.fetch('firstDay')).month}월"
-  mapped_month = {
-    "label" => label,
-    "start_week" => start_week,
-    "total_weeks" => month.fetch("totalWeeks"),
-    "year" => month.fetch("year")
-  }
-  start_week += month.fetch("totalWeeks")
-  mapped_month
-end
-
-payload = {
-  "enabled" => true,
-  "title" => title,
-  "login" => login,
-  "profile_url" => profile_url,
-  "fetched_at" => to_time.iso8601,
-  "updated_label" => "마지막 동기화 #{to_time.strftime('%Y.%m.%d %H:%M')}",
-  "from" => from_time.to_date.iso8601,
-  "to" => to_time.to_date.iso8601,
-  "range_label" => "#{from_time.strftime('%Y.%m.%d')} ~ #{to_time.strftime('%Y.%m.%d')}",
-  "summary_label" => "최근 1년 동안 #{calendar.fetch('totalContributions')}회 기여",
-  "total_contributions" => calendar.fetch("totalContributions"),
-  "months" => months,
-  "weeks" => weeks
-}
+)
 
 write_payload(OUTPUT_PATH, payload)
-puts "GitHub contributions cache updated for #{login}."
+puts "GitHub contributions cache updated for #{logins.join(', ')}."

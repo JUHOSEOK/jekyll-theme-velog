@@ -1,76 +1,300 @@
 {% assign contributions_enabled = site.data.theme.hero.github_contributions.enabled | default: false %}
 {% assign graph = site.data.github_contributions_cache %}
-{% if contributions_enabled and graph and graph.enabled and graph.weeks and graph.weeks.size > 0 %}
-  <section class="github-graph" aria-label="GitHub 기여 그래프">
-    <div class="github-graph__header">
-      <p class="github-graph__summary">{{ graph.summary_label }}</p>
-      <a class="github-graph__link" href="{{ graph.profile_url }}" target="_blank" rel="noreferrer">
-        @{{ graph.login }}
-      </a>
-    </div>
+{% assign graph_years = graph.years %}
+{% if contributions_enabled and graph and graph.enabled %}
+  {% if graph.account_graphs and graph.account_graphs.size > 0 %}
+    <section class="github-graphs" aria-label="GitHub 기여 그래프">
+      {% if graph.title != "" %}
+        <p class="github-graphs__title">{{ graph.title }}</p>
+      {% endif %}
 
-    <div class="github-graph__scroll">
-      <div class="github-graph__calendar" style="--week-count: {{ graph.weeks.size }};">
-        <div class="github-graph__months" aria-hidden="true">
-          {% for month in graph.months %}
-            <span
-              class="github-graph__month"
-              style="grid-column: {{ month.start_week }} / span {{ month.total_weeks }};"
-            >
-              {{ month.label }}
-            </span>
-          {% endfor %}
-        </div>
+      <div class="github-graphs__list">
+        {% for account_graph in graph.account_graphs %}
+          {% assign account_years = account_graph.years %}
+          {% if account_years and account_years.size > 0 %}
+            <section class="github-graph github-graph--account" aria-label="@{{ account_graph.login }} GitHub 기여 그래프" data-github-graph>
+              <div class="github-graph__header">
+                <div class="github-graph__meta">
+                  <a class="github-graph__account-link" href="{{ account_graph.profile_url }}" target="_blank" rel="noreferrer">
+                    @{{ account_graph.login }}
+                  </a>
+                  <p class="github-graph__summary">{{ account_years.first.summary_label }}</p>
+                </div>
 
-        <div
-          class="github-graph__body"
-          role="img"
-          aria-label="{{ graph.range_label }} 동안 총 {{ graph.total_contributions }}회의 GitHub 기여"
-        >
-          <div class="github-graph__days" aria-hidden="true">
-            <span class="github-graph__day"></span>
-            <span class="github-graph__day">월</span>
-            <span class="github-graph__day"></span>
-            <span class="github-graph__day">수</span>
-            <span class="github-graph__day"></span>
-            <span class="github-graph__day">금</span>
-            <span class="github-graph__day"></span>
-          </div>
-
-          <div class="github-graph__weeks">
-            {% for week in graph.weeks %}
-              <div class="github-graph__week">
-                {% for day in week.days %}
-                  {% if day.is_padding %}
-                    <span class="github-graph__cell github-graph__cell--padding" aria-hidden="true"></span>
-                  {% else %}
-                    <span
-                      class="github-graph__cell github-graph__cell--{{ day.level | downcase }}"
-                      title="{{ day.tooltip }}"
-                      aria-label="{{ day.tooltip }}"
-                    ></span>
-                  {% endif %}
-                {% endfor %}
+                {% if account_years.size > 1 %}
+                  <div class="github-graph__years" role="tablist" aria-label="@{{ account_graph.login }} GitHub 기여 연도 선택">
+                    {% for year_data in account_years %}
+                      <button
+                        class="github-graph__year-button{% if forloop.first %} is-active{% endif %}"
+                        type="button"
+                        role="tab"
+                        data-github-graph-year
+                        data-year="{{ year_data.year }}"
+                        aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+                      >
+                        {{ year_data.year }}
+                      </button>
+                    {% endfor %}
+                  </div>
+                {% endif %}
               </div>
+
+              {% for year_data in account_years %}
+                <div
+                  class="github-graph__panel{% if forloop.first %} is-active{% endif %}"
+                  data-github-graph-panel
+                  data-year="{{ year_data.year }}"
+                  data-summary-label="{{ year_data.summary_label }}"
+                  {% unless forloop.first %}hidden{% endunless %}
+                >
+                  <div class="github-graph__scroll">
+                    <div class="github-graph__calendar" style="--week-count: {{ year_data.weeks.size }};">
+                      <div class="github-graph__months" aria-hidden="true">
+                        {% for month in year_data.months %}
+                          <span
+                            class="github-graph__month"
+                            style="grid-column: {{ month.start_week }} / span {{ month.total_weeks }};"
+                          >
+                            {{ month.label }}
+                          </span>
+                        {% endfor %}
+                      </div>
+
+                      <div
+                        class="github-graph__body"
+                        role="img"
+                        aria-label="{{ year_data.range_label }} 동안 총 {{ year_data.total_contributions }}회의 GitHub 기여"
+                      >
+                        <div class="github-graph__days" aria-hidden="true">
+                          <span class="github-graph__day"></span>
+                          <span class="github-graph__day">월</span>
+                          <span class="github-graph__day"></span>
+                          <span class="github-graph__day">수</span>
+                          <span class="github-graph__day"></span>
+                          <span class="github-graph__day">금</span>
+                          <span class="github-graph__day"></span>
+                        </div>
+
+                        <div class="github-graph__weeks">
+                          {% for week in year_data.weeks %}
+                            <div class="github-graph__week">
+                              {% for day in week.days %}
+                                {% if day.is_padding %}
+                                  <span class="github-graph__cell github-graph__cell--padding" aria-hidden="true"></span>
+                                {% else %}
+                                  <span
+                                    class="github-graph__cell github-graph__cell--{{ day.level | downcase }}"
+                                    title="{{ day.tooltip }}"
+                                    aria-label="{{ day.tooltip }}"
+                                  ></span>
+                                {% endif %}
+                              {% endfor %}
+                            </div>
+                          {% endfor %}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+
+              <div class="github-graph__footer">
+                <p class="github-graph__updated">{{ graph.updated_label }}</p>
+                <div class="github-graph__legend" aria-hidden="true">
+                  <span>적음</span>
+                  <div class="github-graph__legend-scale">
+                    <span class="github-graph__legend-cell"></span>
+                    <span class="github-graph__legend-cell github-graph__legend-cell--first"></span>
+                    <span class="github-graph__legend-cell github-graph__legend-cell--second"></span>
+                    <span class="github-graph__legend-cell github-graph__legend-cell--third"></span>
+                    <span class="github-graph__legend-cell github-graph__legend-cell--fourth"></span>
+                  </div>
+                  <span>많음</span>
+                </div>
+              </div>
+            </section>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </section>
+  {% elsif graph_years and graph_years.size > 0 %}
+    <section class="github-graph" aria-label="GitHub 기여 그래프" data-github-graph>
+      <div class="github-graph__header">
+        <div class="github-graph__meta">
+          <p class="github-graph__summary">{{ graph_years.first.summary_label }}</p>
+          <div class="github-graph__accounts">
+            {% for account in graph.accounts %}
+              <a class="github-graph__link" href="{{ account.profile_url }}" target="_blank" rel="noreferrer">
+                @{{ account.login }}
+              </a>
             {% endfor %}
           </div>
         </div>
-      </div>
-    </div>
 
-    <div class="github-graph__footer">
-      <p class="github-graph__updated">{{ graph.updated_label }}</p>
-      <div class="github-graph__legend" aria-hidden="true">
-        <span>적음</span>
-        <div class="github-graph__legend-scale">
-          <span class="github-graph__legend-cell"></span>
-          <span class="github-graph__legend-cell github-graph__legend-cell--first"></span>
-          <span class="github-graph__legend-cell github-graph__legend-cell--second"></span>
-          <span class="github-graph__legend-cell github-graph__legend-cell--third"></span>
-          <span class="github-graph__legend-cell github-graph__legend-cell--fourth"></span>
-        </div>
-        <span>많음</span>
+        {% if graph_years.size > 1 %}
+          <div class="github-graph__years" role="tablist" aria-label="GitHub 기여 연도 선택">
+            {% for year_data in graph_years %}
+              <button
+                class="github-graph__year-button{% if forloop.first %} is-active{% endif %}"
+                type="button"
+                role="tab"
+                data-github-graph-year
+                data-year="{{ year_data.year }}"
+                aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+              >
+                {{ year_data.year }}
+              </button>
+            {% endfor %}
+          </div>
+        {% endif %}
       </div>
-    </div>
-  </section>
+
+      {% for year_data in graph_years %}
+        <div
+          class="github-graph__panel{% if forloop.first %} is-active{% endif %}"
+          data-github-graph-panel
+          data-year="{{ year_data.year }}"
+          data-summary-label="{{ year_data.summary_label }}"
+          {% unless forloop.first %}hidden{% endunless %}
+        >
+          <div class="github-graph__scroll">
+            <div class="github-graph__calendar" style="--week-count: {{ year_data.weeks.size }};">
+              <div class="github-graph__months" aria-hidden="true">
+                {% for month in year_data.months %}
+                  <span
+                    class="github-graph__month"
+                    style="grid-column: {{ month.start_week }} / span {{ month.total_weeks }};"
+                  >
+                    {{ month.label }}
+                  </span>
+                {% endfor %}
+              </div>
+
+              <div
+                class="github-graph__body"
+                role="img"
+                aria-label="{{ year_data.range_label }} 동안 총 {{ year_data.total_contributions }}회의 GitHub 기여"
+              >
+                <div class="github-graph__days" aria-hidden="true">
+                  <span class="github-graph__day"></span>
+                  <span class="github-graph__day">월</span>
+                  <span class="github-graph__day"></span>
+                  <span class="github-graph__day">수</span>
+                  <span class="github-graph__day"></span>
+                  <span class="github-graph__day">금</span>
+                  <span class="github-graph__day"></span>
+                </div>
+
+                <div class="github-graph__weeks">
+                  {% for week in year_data.weeks %}
+                    <div class="github-graph__week">
+                      {% for day in week.days %}
+                        {% if day.is_padding %}
+                          <span class="github-graph__cell github-graph__cell--padding" aria-hidden="true"></span>
+                        {% else %}
+                          <span
+                            class="github-graph__cell github-graph__cell--{{ day.level | downcase }}"
+                            title="{{ day.tooltip }}"
+                            aria-label="{{ day.tooltip }}"
+                          ></span>
+                        {% endif %}
+                      {% endfor %}
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+
+      <div class="github-graph__footer">
+        <p class="github-graph__updated">{{ graph.updated_label }}</p>
+        <div class="github-graph__legend" aria-hidden="true">
+          <span>적음</span>
+          <div class="github-graph__legend-scale">
+            <span class="github-graph__legend-cell"></span>
+            <span class="github-graph__legend-cell github-graph__legend-cell--first"></span>
+            <span class="github-graph__legend-cell github-graph__legend-cell--second"></span>
+            <span class="github-graph__legend-cell github-graph__legend-cell--third"></span>
+            <span class="github-graph__legend-cell github-graph__legend-cell--fourth"></span>
+          </div>
+          <span>많음</span>
+        </div>
+      </div>
+    </section>
+  {% elsif graph.weeks and graph.weeks.size > 0 %}
+    <section class="github-graph" aria-label="GitHub 기여 그래프">
+      <div class="github-graph__header">
+        <p class="github-graph__summary">{{ graph.summary_label }}</p>
+        <a class="github-graph__link" href="{{ graph.profile_url }}" target="_blank" rel="noreferrer">
+          @{{ graph.login }}
+        </a>
+      </div>
+
+      <div class="github-graph__scroll">
+        <div class="github-graph__calendar" style="--week-count: {{ graph.weeks.size }};">
+          <div class="github-graph__months" aria-hidden="true">
+            {% for month in graph.months %}
+              <span
+                class="github-graph__month"
+                style="grid-column: {{ month.start_week }} / span {{ month.total_weeks }};"
+              >
+                {{ month.label }}
+              </span>
+            {% endfor %}
+          </div>
+
+          <div
+            class="github-graph__body"
+            role="img"
+            aria-label="{{ graph.range_label }} 동안 총 {{ graph.total_contributions }}회의 GitHub 기여"
+          >
+            <div class="github-graph__days" aria-hidden="true">
+              <span class="github-graph__day"></span>
+              <span class="github-graph__day">월</span>
+              <span class="github-graph__day"></span>
+              <span class="github-graph__day">수</span>
+              <span class="github-graph__day"></span>
+              <span class="github-graph__day">금</span>
+              <span class="github-graph__day"></span>
+            </div>
+
+            <div class="github-graph__weeks">
+              {% for week in graph.weeks %}
+                <div class="github-graph__week">
+                  {% for day in week.days %}
+                    {% if day.is_padding %}
+                      <span class="github-graph__cell github-graph__cell--padding" aria-hidden="true"></span>
+                    {% else %}
+                      <span
+                        class="github-graph__cell github-graph__cell--{{ day.level | downcase }}"
+                        title="{{ day.tooltip }}"
+                        aria-label="{{ day.tooltip }}"
+                      ></span>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="github-graph__footer">
+        <p class="github-graph__updated">{{ graph.updated_label }}</p>
+        <div class="github-graph__legend" aria-hidden="true">
+          <span>적음</span>
+          <div class="github-graph__legend-scale">
+            <span class="github-graph__legend-cell"></span>
+            <span class="github-graph__legend-cell github-graph__legend-cell--first"></span>
+            <span class="github-graph__legend-cell github-graph__legend-cell--second"></span>
+            <span class="github-graph__legend-cell github-graph__legend-cell--third"></span>
+            <span class="github-graph__legend-cell github-graph__legend-cell--fourth"></span>
+          </div>
+          <span>많음</span>
+        </div>
+      </div>
+    </section>
+  {% endif %}
 {% endif %}
