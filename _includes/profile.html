@@ -1,6 +1,5 @@
 {% assign theme = site.data.theme %}
 {% assign series_count = site.posts | where_exp: "post", "post.series" | group_by: "series" | size %}
-{% assign github_profile = site.data.github_profile_cache %}
 {% assign github_profiles = site.data.github_profiles_cache.profiles %}
 {% assign profile_accounts = site.data.profile.accounts %}
 {% assign configured_login = site.data.theme.hero.github_contributions.username | default: "" %}
@@ -8,121 +7,107 @@
 {% if configured_login == "" and fallback_github_url contains 'github.com/' %}
   {% assign configured_login = fallback_github_url | split: 'github.com/' | last | split: '/' | first | split: '?' | first | split: '#' | first %}
 {% endif %}
-{% assign profile_name = site.data.profile.display_name %}
-{% assign profile_bio = site.data.profile.bio %}
-{% assign profile_intro = site.data.profile.intro %}
-{% assign profile_avatar = site.data.profile.avatar %}
-{% if github_profile and github_profile.enabled and github_profile.login == configured_login %}
-  {% if github_profile.display_name != "" %}
-    {% assign profile_name = github_profile.display_name %}
-  {% elsif github_profile.login != "" %}
-    {% assign profile_name = github_profile.login %}
-  {% endif %}
-  {% if github_profile.bio != "" %}
-    {% assign profile_bio = github_profile.bio %}
-  {% endif %}
-  {% if github_profile.intro != "" %}
-    {% assign profile_intro = github_profile.intro %}
-  {% elsif profile_intro == "" or profile_intro contains 'GitHub 프로필을 연결하면' %}
-    {% assign profile_intro = '@' | append: github_profile.login %}
-  {% endif %}
-  {% if github_profile.avatar_url != "" %}
-    {% assign profile_avatar = github_profile.avatar_url %}
-  {% endif %}
-{% endif %}
 <section class="profile">
   <div class="profile__section">
-    <div class="profile__left">
-      {% if profile_avatar contains '://' %}
-        <img
-          class="profile__avatar"
-          src="{{ profile_avatar }}"
-          alt="{{ profile_name }}"
-          width="128"
-          height="128"
-        >
-      {% else %}
-        <img
-          class="profile__avatar"
-          src="{{ profile_avatar | relative_url }}"
-          alt="{{ profile_name }}"
-          width="128"
-          height="128"
-        >
-      {% endif %}
-      <div class="profile__info">
-        <h1 class="profile__name">{{ profile_name }}</h1>
-        <p class="profile__bio">{{ profile_bio }}</p>
-        <p class="profile__intro">{{ profile_intro }}</p>
-        {% if theme.hero.show_stats != false %}
-          <div class="profile__stats">
-            <div class="profile__stat">
-              <span class="profile__stat-value">{{ site.posts | size }}</span>
-              <span class="profile__stat-label">{{ theme.labels.posts }}</span>
-            </div>
-            <div class="profile__stat">
-              <span class="profile__stat-value">{{ series_count }}</span>
-              <span class="profile__stat-label">{{ theme.labels.series }}</span>
-            </div>
-          </div>
+    <div class="profile__grid">
+      {% for configured_account in profile_accounts %}
+        {% assign account_login = configured_account.login | default: "" %}
+        {% assign account_name = configured_account.display_name | default: account_login %}
+        {% assign account_avatar = configured_account.avatar | default: site.data.profile.avatar %}
+        {% assign account_url = configured_account.github | default: "" %}
+        {% assign account_bio = configured_account.bio | default: "" %}
+        {% assign account_intro = configured_account.intro | default: "" %}
+
+        {% if account_login == configured_login %}
+          {% if account_name == "" %}
+            {% assign account_name = site.data.profile.display_name %}
+          {% endif %}
+          {% if account_bio == "" %}
+            {% assign account_bio = site.data.profile.bio %}
+          {% endif %}
+          {% if account_intro == "" %}
+            {% assign account_intro = site.data.profile.intro %}
+          {% endif %}
+          {% if account_url == "" %}
+            {% assign account_url = fallback_github_url %}
+          {% endif %}
         {% endif %}
 
-        {% if profile_accounts and profile_accounts.size > 0 %}
-          <div class="profile__accounts">
-            <p class="profile__accounts-title">운영 GitHub 계정</p>
-            <div class="profile__accounts-list">
-              {% for configured_account in profile_accounts %}
-                {% assign account_login = configured_account.login | default: "" %}
-                {% assign account_name = configured_account.display_name | default: account_login %}
-                {% assign account_avatar = configured_account.avatar | default: site.data.profile.avatar %}
-                {% assign account_url = configured_account.github | default: "" %}
-                {% if github_profiles %}
-                  {% for account_profile in github_profiles %}
-                    {% if account_profile.enabled and account_profile.login == account_login %}
-                      {% if account_profile.display_name != "" %}
-                        {% assign account_name = account_profile.display_name %}
-                      {% endif %}
-                      {% if account_profile.avatar_url != "" %}
-                        {% assign account_avatar = account_profile.avatar_url %}
-                      {% endif %}
-                      {% if account_profile.profile_url != "" %}
-                        {% assign account_url = account_profile.profile_url %}
-                      {% endif %}
-                    {% endif %}
-                  {% endfor %}
-                {% endif %}
-                {% if account_login != "" and account_url != "" %}
-                  <a class="profile__account-card" href="{{ account_url }}" target="_blank" rel="noreferrer">
-                    {% if account_avatar contains '://' %}
-                      <img
-                        class="profile__account-avatar"
-                        src="{{ account_avatar }}"
-                        alt="{{ account_name }}"
-                        width="40"
-                        height="40"
-                      >
-                    {% else %}
-                      <img
-                        class="profile__account-avatar"
-                        src="{{ account_avatar | relative_url }}"
-                        alt="{{ account_name }}"
-                        width="40"
-                        height="40"
-                      >
-                    {% endif %}
-                    <span class="profile__account-body">
-                      <span class="profile__account-name">{{ account_name }}</span>
-                      <span class="profile__account-login">@{{ account_login }}</span>
-                    </span>
-                  </a>
-                {% endif %}
-              {% endfor %}
-            </div>
-          </div>
+        {% if github_profiles %}
+          {% for account_profile in github_profiles %}
+            {% if account_profile.enabled and account_profile.login == account_login %}
+              {% if account_profile.display_name != "" %}
+                {% assign account_name = account_profile.display_name %}
+              {% endif %}
+              {% if account_profile.avatar_url != "" %}
+                {% assign account_avatar = account_profile.avatar_url %}
+              {% endif %}
+              {% if account_profile.profile_url != "" %}
+                {% assign account_url = account_profile.profile_url %}
+              {% endif %}
+              {% if account_profile.bio != "" %}
+                {% assign account_bio = account_profile.bio %}
+              {% endif %}
+              {% if account_profile.intro != "" %}
+                {% assign account_intro = account_profile.intro %}
+              {% endif %}
+            {% endif %}
+          {% endfor %}
         {% endif %}
-      </div>
+
+        {% if account_login != "" and account_intro == "" %}
+          {% assign account_intro = '@' | append: account_login %}
+        {% endif %}
+
+        {% if account_login != "" and account_url != "" %}
+          <a class="profile__card" href="{{ account_url }}" target="_blank" rel="noreferrer">
+            {% if account_avatar contains '://' %}
+              <img
+                class="profile__card-avatar"
+                src="{{ account_avatar }}"
+                alt="{{ account_name }}"
+                width="112"
+                height="112"
+              >
+            {% else %}
+              <img
+                class="profile__card-avatar"
+                src="{{ account_avatar | relative_url }}"
+                alt="{{ account_name }}"
+                width="112"
+                height="112"
+              >
+            {% endif %}
+            <div class="profile__card-body">
+              <div class="profile__card-header">
+                <h1 class="profile__card-name">{{ account_name }}</h1>
+                <p class="profile__card-login">@{{ account_login }}</p>
+              </div>
+              {% if account_bio != "" %}
+                <p class="profile__card-bio">{{ account_bio }}</p>
+              {% endif %}
+              {% if account_intro != "" %}
+                <p class="profile__card-intro">{{ account_intro }}</p>
+              {% endif %}
+            </div>
+          </a>
+        {% endif %}
+      {% endfor %}
     </div>
   </div>
+
+  {% if theme.hero.show_stats != false %}
+    <div class="profile__stats">
+      <div class="profile__stat">
+        <span class="profile__stat-value">{{ site.posts | size }}</span>
+        <span class="profile__stat-label">{{ theme.labels.posts }}</span>
+      </div>
+      <div class="profile__stat">
+        <span class="profile__stat-value">{{ series_count }}</span>
+        <span class="profile__stat-label">{{ theme.labels.series }}</span>
+      </div>
+    </div>
+  {% endif %}
 
   <div class="profile__separator"></div>
   {% include github-contributions.html %}
