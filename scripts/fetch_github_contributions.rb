@@ -230,18 +230,14 @@ def build_year_ranges(year_count:, now:)
   Array.new(year_count) do |index|
     year = current_year - index
     from_date = Date.new(year, 1, 1)
-    to_date = year == current_year ? now.to_date : Date.new(year, 12, 31)
+    to_date = Date.new(year, 12, 31)
 
     {
       year: year,
       from_date: from_date,
       to_date: to_date,
       from_time: Time.new(from_date.year, from_date.month, from_date.day, 0, 0, 0, now.utc_offset),
-      to_time: if year == current_year
-                 now
-               else
-                 Time.new(to_date.year, to_date.month, to_date.day, 23, 59, 59, now.utc_offset)
-               end
+      to_time: year == current_year ? now : Time.new(to_date.year, to_date.month, to_date.day, 23, 59, 59, now.utc_offset)
     }
   end
 end
@@ -316,7 +312,7 @@ def build_months(start_date:, end_date:)
     month_key = [date.year, date.month]
     if current_month.nil? || current_month[:key] != month_key
       if current_month
-        current_month[:payload]["total_weeks"] = current_week - current_month[:payload]["start_week"] + 1
+        current_month[:payload]["total_weeks"] = current_week - current_month[:payload]["start_week"]
         months << current_month[:payload]
       end
 
